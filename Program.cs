@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sudoku;
 
+
+//Logic using args and a .cvs Testfile 
 string fileName = args[0];
 
 string[] lines = File.ReadAllLines(fileName);

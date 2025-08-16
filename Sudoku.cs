@@ -11,6 +11,7 @@ public class SudokuPuzzle
     public int[] Sudoku { get; set; }
     int?[,] sudokuPossibilities = new int?[81, 9];
     bool sudokuSolved = false;
+    int loopCounter = 0;
 
     public SudokuPuzzle(string name, int[] puzzle)
     {
@@ -21,14 +22,14 @@ public class SudokuPuzzle
 
     public void Solve()
     {
-        int counter = 0;
+        
         int noChange = 0;
         Console.WriteLine("\n" + name + "Solving...\n");
 
         while (!sudokuSolved)
         {
-            counter++;
-            int?[,] startchecker = new int?[81, 9];
+            loopCounter++;
+            int?[,] startchecker = new int?[81, 9];     //saving start of loop state
             for (int i = 0; i < 81; i++)
                 for (int k = 0; k < 9; k++)
                     startchecker[i, k] = sudokuPossibilities[i, k];
@@ -44,19 +45,20 @@ public class SudokuPuzzle
                 CheckingPair();
                 noChange++;
             }
+            if (change) noChange = 0; //resting flag on change 
             
 
-            if (noChange >= 5)
+            if (noChange > 1)
             {
-                Console.WriteLine("Could not find Solution... :(");
+                Console.WriteLine($"Could not find Solution... :(\n{loopCounter} loops deep before getting stumped");
                 return;
             }
 
         }
-        Console.WriteLine($"Found solution in {counter} loops");
+        Console.WriteLine($"Found solution in {loopCounter} loops");
     }
 
-    public bool StateChecker(int?[,] start)
+    public bool StateChecker(int?[,] start)  //checking the state of current puzzle solution to a saved state
     {
         for (int i = 0; i < 81; i++)
         {
@@ -87,19 +89,20 @@ public class SudokuPuzzle
         }
     }
 
-    public void CheckingPair()
+    public void CheckingPair()      //finding pairs logic
     {
         for (int i = 0; i < 9; i++) RowPair(i);
         for (int i = 0; i < 9; i++) ColumnPair(i);
     }
 
-    public void SolveFromPair()
+    public void SolveFromPair()     //new function for solving from a guess pair
     {
         int noChange = 0;
 
         while (!sudokuSolved)
         {
-            int?[,] startchecker = new int?[81, 9];
+            loopCounter++;
+            int?[,] startchecker = new int?[81, 9];     //saving the state
             for (int i = 0; i < 81; i++)
                 for (int k = 0; k < 9; k++)
                     startchecker[i, k] = sudokuPossibilities[i, k];
@@ -112,10 +115,12 @@ public class SudokuPuzzle
 
             if (!change)
             {
-                CheckingPair();
+                CheckingPair();     // will keep branching until checking both pairs don't lead to a new state.
                 noChange++;
             }
-            if (noChange > 5) return;
+            if (change) noChange = 0;      //reset flag if new state is detected
+
+            if (noChange > 1) return;       //spots the check if no new state is found
             
 
         }
@@ -123,7 +128,7 @@ public class SudokuPuzzle
     }
 
 
-    public void GuessPair(int square, int option1, int option2)
+    public void GuessPair(int square, int option1, int option2)     //testing both guesses of a unknown pair
     {
         int?[,] possibilitiesState = new int?[81, 9];       //saving the current states
         for (int i = 0; i < 81; i++)
@@ -133,10 +138,10 @@ public class SudokuPuzzle
         int[] sudokuState = new int[81];
         for (int i = 0; i < 81; i++) sudokuState[i] = Sudoku[i];
 
-        Sudoku[square] = option1;
+        Sudoku[square] = option1;       //tesing conditions for option1 guess
         SquareNullified(square);
         RemovePossibilites(square, option1);
-        SolveFromPair();
+        SolveFromPair();                
 
         IsSolved();
         if (!sudokuSolved)
@@ -148,13 +153,13 @@ public class SudokuPuzzle
 
             for (int i = 0; i < 81; i++) Sudoku[i] = sudokuState[i];
 
-            Sudoku[square] = option2;
+            Sudoku[square] = option2;       //testing the conditon for option2 guess if option 1 failed to solve
             SquareNullified(square);
             RemovePossibilites(square, option2);
             SolveFromPair();
 
             IsSolved();
-            if (!sudokuSolved)
+            if (!sudokuSolved)      //resetting back if not solved by either guess - no change flag will come up and stop the test
             {
                 //reseting the current states
                 for (int i = 0; i < 81; i++)
@@ -167,7 +172,7 @@ public class SudokuPuzzle
     }
 
 
-    public void ColumnPair(int column)
+    public void ColumnPair(int column)      //finding unsolved pairs of numbers in column
     {
         int square = column;
         int pair = 0;
@@ -202,7 +207,7 @@ public class SudokuPuzzle
         }
     }
 
-    public void RowPair(int row)
+    public void RowPair(int row)    //finding unsolved pairs of numbers in Row
     {
         int square = row * 9;
         int pair = 0;
@@ -246,14 +251,14 @@ public class SudokuPuzzle
         sudokuSolved = true;
     }
 
-    public void PossibilityCheck()
+    public void PossibilityCheck()      //logic for feeding the singular possibility checks
     {
         for (int i = 0; i < 9; i++) RowCheck(i);
         for (int i = 0; i < 9; i++) ColumnCheck(i);
         for (int i = 0; i < 9; i++) QuadrantCheck(i);
     }
 
-    public void QuadrantCheck(int quadrant)
+    public void QuadrantCheck(int quadrant)      //Checking quadrant for singluar possibility
     {
         var grid = new Grid();
 
@@ -293,7 +298,7 @@ public class SudokuPuzzle
 
     }
 
-    public void ColumnCheck(int column)
+    public void ColumnCheck(int column)  //Checking column for singluar possibility
     {
         int square = column;
         var grid = new Grid();
@@ -330,7 +335,7 @@ public class SudokuPuzzle
         }
     }
 
-    public void RowCheck(int row)
+    public void RowCheck(int row)       //Checking row for singluar possibility
     {
         int square = row * 9;
         var grid = new Grid();
@@ -367,7 +372,7 @@ public class SudokuPuzzle
         }
     }
 
-    public void RemovePossibilitesCheck()
+    public void RemovePossibilitesCheck()    //Iterating through the square to find know squares
     {
         for (int i = 0; i < 81; i++)
         {
@@ -375,20 +380,20 @@ public class SudokuPuzzle
         }
     }
 
-    public void RemovePossibilites(int square, int number)
+    public void RemovePossibilites(int square, int number)      //Logic for removing possibilites of a know square 
     {
         RowRemover(square, number);
         ColumnRemover(square, number);
         QuadrantRemover(square, number);
     }
 
-    public void SquareChecker()
+    public void SquareChecker()             //Iterating through the squares for SquareCheck() 
     {
         for (int i = 0; i < 81; i++) SquareCheck(i);
 
     }
 
-    public void SquareCheck(int square)
+    public void SquareCheck(int square)     //Checking given square for possibilities, setting if only 1
     {
         int check = 0;
         int number = 0;
@@ -405,12 +410,12 @@ public class SudokuPuzzle
         if (check == 1 && Sudoku[square] == 0)          //setting the square
         {
             Sudoku[square] = number;
-            SquareNullified(square); // Nullify possibilities after setting
-            RemovePossibilites(square, number);  //removes the possibilites from the new square
+            SquareNullified(square);            
+            RemovePossibilites(square, number);  
         }
     }
 
-    public void SquareNullified(int square)
+    public void SquareNullified(int square)     //after found square filling its represented square in suokuPossibilies with nulls
     {
         for (int i = 0; i < 9; i++)
         {
@@ -418,13 +423,13 @@ public class SudokuPuzzle
         }
     }
 
-    public void QuadrantRemover(int square, int number)
+    public void QuadrantRemover(int square, int number)     //removing given possibility in a given quadrant
     {
         int quadrant = SquareInfo(square, "quadrant");
 
         for (int i = 0; i < 81; i++)
         {
-            if (SquareInfo(i, "quadrant") == quadrant)
+            if (SquareInfo(i, "quadrant") == quadrant)          //iteration through all squaures to find the squares of the given quadrant
             {
                 for (int k = 0; k < 9; k++)
                 {
@@ -435,7 +440,7 @@ public class SudokuPuzzle
         }
     }
 
-    public void ColumnRemover(int square, int number)
+    public void ColumnRemover(int square, int number)       //removing given possibility in a given Column
     {
         int column = SquareInfo(square, "column");
 
@@ -445,13 +450,13 @@ public class SudokuPuzzle
             {
                 if (sudokuPossibilities[column, i] == number) sudokuPossibilities[column, i] = null;
             }
-            column += 9; //jumping up the column
+            column += 9;                    //jumping up the column
         }
     }
 
-    public void RowRemover(int square, int number)
+    public void RowRemover(int square, int number)          //removing given possibility in a given Row
     {
-        int row = SquareInfo(square, "row") * 9; // *9 to get the starting value
+        int row = SquareInfo(square, "row") * 9; // *9 to get the starting square
         int endRow = row + 9;
 
         for (; row < endRow; row++)
@@ -463,7 +468,7 @@ public class SudokuPuzzle
         }
     }
 
-    public int SquareInfo(int square, string info)
+    public int SquareInfo(int square, string info)      // returns the given row, column or quadrant for a given square
     {
         if (info == "row") return square / 9;
 
@@ -498,7 +503,7 @@ public class SudokuPuzzle
         }
     }
 
-    public struct Grid
+    public struct Grid         // Struct to asses Possibilities in a 9 grid
     {
         int one;
         int two;
