@@ -2,43 +2,106 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 using Sudoku;
 
 
-//Logic using args and a .cvs Testfile 
-string fileName = args[0];
+string option = args[0].ToLower();
 
-string[] lines = File.ReadAllLines(fileName);
 
-foreach (var line in lines)
+switch (option)
 {
-    string[] p = line.Split(',');
-    string name = p[0];
-    int[] puzzle = p[1..].Select(s => int.Parse(s)).ToArray();
-
-    var sudoku = new SudokuPuzzle(name, puzzle);
-
-    Stopwatch sw = Stopwatch.StartNew();
-    sudoku.Solve();
-    sw.Stop();
-
-    sudoku.PrintSudoku();
-    Console.WriteLine($"Execution Time: {sw.Elapsed.TotalSeconds} seconds\n");
+    case "cvs":
+        SudokuFromCVS(args[1]);
+        break;
+    case "ui":
+        SolverInterface();
+        break;
 }
 
 
-/*
-string test = "Sudoku Medium 3,0,0,0,9,0,0,0,1,5,0,0,1,0,0,0,7,2,9,0,0,0,5,0,0,0,0,0,4,0,0,0,2,0,0,0,0,0,0,8,7,0,9,0,0,0,0,3,0,0,0,0,4,9,7,0,0,3,1,0,6,8,7,0,8,0,0,2,0,3,5,0,1,5,1,6,0,8,0,0,3,0";
 
-string[] p = test.Split(',');
-string name = p[0];
-int[] puzzle = p[1..].Select(s => int.Parse(s)).ToArray();
+void SolverInterface()
+{
+    Console.WriteLine("\n***Welcome to Jack's Sudoku Solver***");
+    while (true)
+    {
+        Console.WriteLine("Options:\n1 - input Sudoku\n5 - exit");
+        string input = Console.ReadLine().ToLower();
 
- var sudoku = new SudokuPuzzle(name, puzzle);
+        switch (input)
+        {
+            case "1":
+                UserInputSudoku();
+                break;
+            case "5":
+                Console.WriteLine("\nB, bye :)");
+                return;
+            default:
+                Console.WriteLine("Invalid Input... try again\n");
+                break;
+        }
+    }
+}
+
+void UserInputSudoku()      //Logic for user inputs and testing
+{
+    bool userSudokuCorret = false;
+
+    int[] puzzle = new int[81];
+    do
+    {
+        Console.WriteLine("\nInput the Sudoku in one line with a comma after each number, with unknowns as 0\nLike: 1, 2, 0, 2, 0... etc");
+        string userPuzzle = Console.ReadLine();
+
+        try
+        {
+            puzzle = userPuzzle.Split(',').Select(s => int.Parse(s)).ToArray();
+            SudokuException.ValidateUserPuzzle(puzzle);
+            userSudokuCorret = true;
+        }
+        catch (SudokuException ex)
+        {
+            Console.WriteLine($"Invaild Sudoku: {ex.Message}");
+            userSudokuCorret = false;
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Invalid Sudoku: not all entries are numbers.");
+            userSudokuCorret = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+            userSudokuCorret = false;
+        }
+    } while (!userSudokuCorret);
+
+    var sudoku = new SudokuPuzzle("User Generated", puzzle);
 
     Stopwatch sw = Stopwatch.StartNew();
     sudoku.Solve();
     sw.Stop();
     sudoku.PrintSudoku();
-    Console.WriteLine($"Execution Time: {sw.Elapsed.TotalSeconds} seconds\n");
-*/
+    Console.WriteLine($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms\n"); 
+}
+
+void SudokuFromCVS(string fileName) //Logic using args and a .cvs Testfile 
+{
+    string[] lines = File.ReadAllLines(fileName);
+
+    foreach (var line in lines)
+    {
+        string[] p = line.Split(',');
+        string name = p[0];
+        int[] puzzle = p[1..].Select(s => int.Parse(s)).ToArray();
+
+        var sudoku = new SudokuPuzzle(name, puzzle);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        sudoku.Solve();
+        sw.Stop();
+        sudoku.PrintSudoku();
+        Console.WriteLine($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms\n");  
+    }
+}

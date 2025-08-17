@@ -1,3 +1,4 @@
+using System.Data;
 using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Dynamic;
@@ -21,52 +22,52 @@ public class SudokuPuzzle
     }
 
     public static bool IsValidSudoku(int[] sudoku)
-{
-    // Check rows
-    for (int row = 0; row < 9; row++)
     {
-        var seen = new bool[10];
-        for (int col = 0; col < 9; col++)
-        {
-            int val = sudoku[row * 9 + col];
-            if (val < 1 || val > 9 || seen[val]) return false;
-            seen[val] = true;
-        }
-    }
-
-    // Check columns
-    for (int col = 0; col < 9; col++)
-    {
-        var seen = new bool[10];
+        // Check rows
         for (int row = 0; row < 9; row++)
         {
-            int val = sudoku[row * 9 + col];
-            if (val < 1 || val > 9 || seen[val]) return false;
-            seen[val] = true;
+            var seen = new bool[10];
+            for (int col = 0; col < 9; col++)
+            {
+                int val = sudoku[row * 9 + col];
+                if (val < 1 || val > 9 || seen[val]) return false;
+                seen[val] = true;
+            }
         }
-    }
 
-    // Check 3x3 boxes
-    for (int boxRow = 0; boxRow < 3; boxRow++)
-    {
-        for (int boxCol = 0; boxCol < 3; boxCol++)
+        // Check columns
+        for (int col = 0; col < 9; col++)
         {
             var seen = new bool[10];
-            for (int row = 0; row < 3; row++)
+            for (int row = 0; row < 9; row++)
             {
-                for (int col = 0; col < 3; col++)
+                int val = sudoku[row * 9 + col];
+                if (val < 1 || val > 9 || seen[val]) return false;
+                seen[val] = true;
+            }
+        }
+
+        // Check 3x3 boxes
+        for (int boxRow = 0; boxRow < 3; boxRow++)
+        {
+            for (int boxCol = 0; boxCol < 3; boxCol++)
+            {
+                var seen = new bool[10];
+                for (int row = 0; row < 3; row++)
                 {
-                    int idx = (boxRow * 3 + row) * 9 + (boxCol * 3 + col);
-                    int val = sudoku[idx];
-                    if (val < 1 || val > 9 || seen[val]) return false;
-                    seen[val] = true;
+                    for (int col = 0; col < 3; col++)
+                    {
+                        int idx = (boxRow * 3 + row) * 9 + (boxCol * 3 + col);
+                        int val = sudoku[idx];
+                        if (val < 1 || val > 9 || seen[val]) return false;
+                        seen[val] = true;
+                    }
                 }
             }
         }
-    }
 
-    return true;
-}
+        return true;
+    }
 
     public void Solve()
     {
@@ -171,10 +172,10 @@ public class SudokuPuzzle
             if (change) noChange = 0;      //reset flag if new state is detected
 
             if (noChange > 1) return;       //spots the check if no new state is found
-            
+
 
         }
-        
+
     }
 
 
@@ -191,7 +192,7 @@ public class SudokuPuzzle
         Sudoku[square] = option1;       //tesing conditions for option1 guess
         SquareNullified(square);
         RemovePossibilites(square, option1);
-        SolveFromPair();                
+        SolveFromPair();
 
         IsSolved();
         if (!sudokuSolved)
@@ -214,7 +215,7 @@ public class SudokuPuzzle
                 //reseting the current states
                 for (int i = 0; i < 81; i++)
                     for (int k = 0; k < 9; k++)
-                    sudokuPossibilities[i, k] = possibilitiesState[i, k];
+                        sudokuPossibilities[i, k] = possibilitiesState[i, k];
 
                 for (int i = 0; i < 81; i++) Sudoku[i] = sudokuState[i];
             }
@@ -229,9 +230,9 @@ public class SudokuPuzzle
         for (int square = 0; square < 81; square++)
         {
             if (SquareInfo(square, "quadrant") == quadrant)
-           {
+            {
                 if (Sudoku[square] == 0) pair++;
-            }    
+            }
         }
         if (pair == 2)
         {
@@ -255,7 +256,7 @@ public class SudokuPuzzle
                         if (option1 != 0) GuessPair(square, option1, option2);
                     }
                 }
-            }   
+            }
         }
     }
 
@@ -497,8 +498,8 @@ public class SudokuPuzzle
         if (check == 1 && Sudoku[square] == 0)          //setting the square
         {
             Sudoku[square] = number;
-            SquareNullified(square);            
-            RemovePossibilites(square, number);  
+            SquareNullified(square);
+            RemovePossibilites(square, number);
         }
     }
 
@@ -577,9 +578,6 @@ public class SudokuPuzzle
         }
         else return -1;
     }
-
-    
-
     public void PrintSudoku()
     {
         for (int i = 0; i < 81; i++)
