@@ -20,11 +20,59 @@ public class SudokuPuzzle
         SudokuSetter();
     }
 
+    public static bool IsValidSudoku(int[] sudoku)
+{
+    // Check rows
+    for (int row = 0; row < 9; row++)
+    {
+        var seen = new bool[10];
+        for (int col = 0; col < 9; col++)
+        {
+            int val = sudoku[row * 9 + col];
+            if (val < 1 || val > 9 || seen[val]) return false;
+            seen[val] = true;
+        }
+    }
+
+    // Check columns
+    for (int col = 0; col < 9; col++)
+    {
+        var seen = new bool[10];
+        for (int row = 0; row < 9; row++)
+        {
+            int val = sudoku[row * 9 + col];
+            if (val < 1 || val > 9 || seen[val]) return false;
+            seen[val] = true;
+        }
+    }
+
+    // Check 3x3 boxes
+    for (int boxRow = 0; boxRow < 3; boxRow++)
+    {
+        for (int boxCol = 0; boxCol < 3; boxCol++)
+        {
+            var seen = new bool[10];
+            for (int row = 0; row < 3; row++)
+            {
+                for (int col = 0; col < 3; col++)
+                {
+                    int idx = (boxRow * 3 + row) * 9 + (boxCol * 3 + col);
+                    int val = sudoku[idx];
+                    if (val < 1 || val > 9 || seen[val]) return false;
+                    seen[val] = true;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
     public void Solve()
     {
-        
+
         int noChange = 0;
-        Console.WriteLine("\n" + name + "Solving...\n");
+        Console.WriteLine("\n" + name + " Solving...");
 
         while (!sudokuSolved)
         {
@@ -46,7 +94,7 @@ public class SudokuPuzzle
                 noChange++;
             }
             if (change) noChange = 0; //resting flag on change 
-            
+
 
             if (noChange > 1)
             {
@@ -55,7 +103,8 @@ public class SudokuPuzzle
             }
 
         }
-        Console.WriteLine($"Found solution in {loopCounter} loops");
+        if (IsValidSudoku(Sudoku)) Console.WriteLine($"Found solution in {loopCounter} loops");
+        else Console.WriteLine("!!!!Invalid Solution found - Consult user manual... sorry");
     }
 
     public bool StateChecker(int?[,] start)  //checking the state of current puzzle solution to a saved state
@@ -93,6 +142,7 @@ public class SudokuPuzzle
     {
         for (int i = 0; i < 9; i++) RowPair(i);
         for (int i = 0; i < 9; i++) ColumnPair(i);
+        for (int i = 0; i < 9; i++) QuadrantPair(i);
     }
 
     public void SolveFromPair()     //new function for solving from a guess pair
@@ -171,6 +221,43 @@ public class SudokuPuzzle
         }
     }
 
+
+    public void QuadrantPair(int quadrant)
+    {
+        int pair = 0;
+
+        for (int square = 0; square < 81; square++)
+        {
+            if (SquareInfo(square, "quadrant") == quadrant)
+           {
+                if (Sudoku[square] == 0) pair++;
+            }    
+        }
+        if (pair == 2)
+        {
+            for (int square = 0; square < 81; square++)
+            {
+                if (SquareInfo(square, "quadrant") == quadrant)
+                {
+                    if (Sudoku[square] == 0)
+                    {
+                        int option1 = 0;
+                        int option2 = 0;
+                        for (int k = 0; k < 9; k++)
+                        {
+                            if (sudokuPossibilities[square, k] != null)
+                            {
+                                if (option1 == 0) option1 = (int)sudokuPossibilities[square, k];
+                                else if (option1 != 0) option2 = (int)sudokuPossibilities[square, k];
+                                else return;
+                            }
+                        }
+                        if (option1 != 0) GuessPair(square, option1, option2);
+                    }
+                }
+            }   
+        }
+    }
 
     public void ColumnPair(int column)      //finding unsolved pairs of numbers in column
     {
