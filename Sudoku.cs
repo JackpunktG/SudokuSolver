@@ -88,6 +88,12 @@ public class SudokuPuzzle
             PossibilityCheck();
             IsSolved();
             bool change = StateChecker(startchecker);
+            if (HasContradiction())
+            {
+                //PrintSudoku();
+                //Console.WriteLine("Contradiction found. Puzzle is unsolvable with current logic.");
+                return;
+            }
 
             if (!change)
             {
@@ -104,7 +110,7 @@ public class SudokuPuzzle
             }
 
         }
-        if (IsValidSudoku(Sudoku)) Console.WriteLine($"Found solution in {loopCounter} loops");
+        if (IsValidSudoku(Sudoku)) Console.WriteLine($"Found valid solution in {loopCounter} loops");
         else Console.WriteLine("!!!!Invalid Solution found - Consult user manual... sorry");
     }
 
@@ -141,12 +147,15 @@ public class SudokuPuzzle
 
     public void CheckingPair()      //finding pairs logic
     {
-        for (int i = 0; i < 9; i++) RowPair(i);
-        for (int i = 0; i < 9; i++) ColumnPair(i);
-        for (int i = 0; i < 9; i++) QuadrantPair(i);
+        for (int i = 0; i < 9; i++) RowPair(i, 2);
+        for (int i = 0; i < 9; i++) ColumnPair(i, 2);
+        for (int i = 0; i < 9; i++) QuadrantPair(i, 3);
+        for (int i = 0; i < 9; i++) RowPair(i, 3);
+        for (int i = 0; i < 9; i++) ColumnPair(i, 3);
+        for (int i = 0; i < 9; i++) QuadrantPair(i, 3);
     }
 
-    public void SolveFromPair()     //new function for solving from a guess pair
+   public void SolveFromPair()     //new function for solving from a guess pair
     {
         int noChange = 0;
 
@@ -164,6 +173,13 @@ public class SudokuPuzzle
             IsSolved();
             bool change = StateChecker(startchecker);
 
+
+            if (HasContradiction())
+            {
+                //PrintSudoku();
+                //Console.WriteLine("Contradiction found. Puzzle is unsolvable with current logic.");
+                return;
+            }
             if (!change)
             {
                 CheckingPair();     // will keep branching until checking both pairs don't lead to a new state.
@@ -177,7 +193,6 @@ public class SudokuPuzzle
         }
 
     }
-
 
     public void GuessPair(int square, int option1, int option2)     //testing both guesses of a unknown pair
     {
@@ -222,8 +237,88 @@ public class SudokuPuzzle
         }
     }
 
+    public bool HasContradiction()     //kills dead end loops with unsolvable solutions before they loop forever
+    {
+        for (int i = 0; i < 81; i++)
+        {
+            if (Sudoku[i] == 0)
+            {
+                bool hasPossibility = false;
+                for (int k = 0; k < 9; k++)
+                {
+                    if (sudokuPossibilities[i, k] != null)
+                    {
+                        hasPossibility = true;
+                        break;
+                    }
+                }
+                if (!hasPossibility)
+                    return true; // Contradiction found
+            }
+        }
+        return false;
+    }
 
-    public void QuadrantPair(int quadrant)
+    public void GuessPair(int square, int option1, int option2, int option3)     //testing both guesses of a unknown pair of 3
+    {
+        int?[,] possibilitiesState = new int?[81, 9];       //saving the current states
+        for (int i = 0; i < 81; i++)
+            for (int k = 0; k < 9; k++)
+                possibilitiesState[i, k] = sudokuPossibilities[i, k];
+
+        int[] sudokuState = new int[81];
+        for (int i = 0; i < 81; i++) sudokuState[i] = Sudoku[i];
+
+        Sudoku[square] = option1;       //tesing conditions for option1 guess
+        SquareNullified(square);
+        RemovePossibilites(square, option1);
+        SolveFromPair();
+
+        IsSolved();
+        if (!sudokuSolved)
+        {
+            //reseting the current states
+            for (int i = 0; i < 81; i++)
+                for (int k = 0; k < 9; k++)
+                    sudokuPossibilities[i, k] = possibilitiesState[i, k];
+
+            for (int i = 0; i < 81; i++) Sudoku[i] = sudokuState[i];
+
+            Sudoku[square] = option2;       //testing the conditon for option2 guess if option 1 failed to solve
+            SquareNullified(square);
+            RemovePossibilites(square, option2);
+            SolveFromPair();
+
+            IsSolved();
+            if (!sudokuSolved)
+            {
+                //reseting the current states
+                for (int i = 0; i < 81; i++)
+                    for (int k = 0; k < 9; k++)
+                        sudokuPossibilities[i, k] = possibilitiesState[i, k];
+
+                for (int i = 0; i < 81; i++) Sudoku[i] = sudokuState[i];
+
+                Sudoku[square] = option3;       //testing the conditon for option2 guess if option 1 failed to solve
+                SquareNullified(square);
+                RemovePossibilites(square, option3);
+                SolveFromPair();
+
+                IsSolved();
+                if (!sudokuSolved)      //resetting back if not solved by either guess - no change flag will come up and stop the test
+                {
+                    //reseting the current states
+                    for (int i = 0; i < 81; i++)
+                        for (int k = 0; k < 9; k++)
+                            sudokuPossibilities[i, k] = possibilitiesState[i, k];
+
+                    for (int i = 0; i < 81; i++) Sudoku[i] = sudokuState[i];
+                }
+            }
+        }
+    }
+
+    public void QuadrantPair(int quadrant, int n) //finding unsolved pairs of numbers in Quadrant
     {
         int pair = 0;
 
@@ -234,7 +329,7 @@ public class SudokuPuzzle
                 if (Sudoku[square] == 0) pair++;
             }
         }
-        if (pair == 2)
+        if (pair == 2 && n == 2)
         {
             for (int square = 0; square < 81; square++)
             {
@@ -258,9 +353,35 @@ public class SudokuPuzzle
                 }
             }
         }
+        if (pair == 3 && n == 3)
+        {
+            for (int square = 0; square < 81; square++)
+            {
+                if (SquareInfo(square, "quadrant") == quadrant)
+                {
+                    if (Sudoku[square] == 0)
+                    {
+                        int option1 = 0;
+                        int option2 = 0;
+                        int option3 = 0;
+                        for (int k = 0; k < 9; k++)
+                        {
+                            if (sudokuPossibilities[square, k] != null)
+                            {
+                            if (option1 == 0) option1 = (int)sudokuPossibilities[square, k];
+                            else if (option1 != 0) option2 = (int)sudokuPossibilities[square, k];
+                            else if (option2 != 0) option3 = (int)sudokuPossibilities[square, k];
+                            else return;
+                        }
+                        }
+                        if (option1 != 0) GuessPair(square, option1, option2, option3);
+                    }
+                }
+            }
+        }
     }
 
-    public void ColumnPair(int column)      //finding unsolved pairs of numbers in column
+    public void ColumnPair(int column, int n)      //finding unsolved pairs of numbers in column
     {
         int square = column;
         int pair = 0;
@@ -270,7 +391,7 @@ public class SudokuPuzzle
             if (Sudoku[square] == 0) pair++;
             square += 9;
         }
-        if (pair == 2)
+        if (pair == 2 && n == 2)
         {
             square = column;
             for (int i = 0; i < 9; i++)
@@ -293,9 +414,34 @@ public class SudokuPuzzle
                 square += 9;
             }
         }
+        if (pair == 3 && n == 3)
+        {
+            square = column;
+            for (int i = 0; i < 9; i++)
+            {
+                if (Sudoku[square] == 0)
+                {
+                    int option1 = 0;
+                    int option2 = 0;
+                    int option3 = 0;
+                    for (int k = 0; k < 9; k++)
+                    {
+                        if (sudokuPossibilities[square, k] != null)
+                         {
+                            if (option1 == 0) option1 = (int)sudokuPossibilities[square, k];
+                            else if (option1 != 0) option2 = (int)sudokuPossibilities[square, k];
+                            else if (option2 != 0) option3 = (int)sudokuPossibilities[square, k];
+                            else return;
+                        }
+                    }
+                    if (option1 != 0) GuessPair(square, option1, option2, option3);
+                }
+                square += 9;
+            }
+        }
     }
 
-    public void RowPair(int row)    //finding unsolved pairs of numbers in Row
+    public void RowPair(int row, int n)    //finding unsolved pairs of numbers in Row
     {
         int square = row * 9;
         int pair = 0;
@@ -305,7 +451,7 @@ public class SudokuPuzzle
             if (Sudoku[square] == 0) pair++;
             square++;
         }
-        if (pair == 2)
+        if (pair == 2 && n == 2)
         {
             square = row * 9;
             for (int i = 0; i < 9; i++)
@@ -324,6 +470,31 @@ public class SudokuPuzzle
                         }
                     }
                     if (option1 != 0) GuessPair(square, option1, option2);
+                }
+                square++;
+            }
+        }
+        if (pair == 3 && n == 3)
+        {
+            square = row * 9;
+            for (int i = 0; i < 9; i++)
+            {
+                if (Sudoku[square] == 0)
+                {
+                    int option1 = 0;
+                    int option2 = 0;
+                    int option3 = 0;
+                    for (int k = 0; k < 9; k++)
+                    {
+                        if (sudokuPossibilities[square, k] != null)
+                        {
+                            if (option1 == 0) option1 = (int)sudokuPossibilities[square, k];
+                            else if (option1 != 0) option2 = (int)sudokuPossibilities[square, k];
+                            else if (option2 != 0) option3 = (int)sudokuPossibilities[square, k];
+                            else return;
+                        }
+                    }
+                    if (option1 != 0) GuessPair(square, option1, option2, option3);
                 }
                 square++;
             }
@@ -578,6 +749,7 @@ public class SudokuPuzzle
         }
         else return -1;
     }
+
     public void PrintSudoku()
     {
         for (int i = 0; i < 81; i++)
