@@ -1,13 +1,14 @@
 ﻿
 
+using System.Data.Common;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 using Sudoku;
 
 
-//string option = args[0].ToLower();
-string option = "ui";
+string option = args[0].ToLower();
+//string option = "ui";
 
 switch (option)
 {
@@ -98,6 +99,13 @@ void SudokuFromCVS(string fileName) //Logic using args and a .cvs Testfile
 
         var sudoku = new SudokuPuzzle(name, puzzle);
 
+        try { SudokuException.ValidateUserPuzzle(sudoku.Sudoku); }
+        catch (SudokuException ex)
+        {
+            Console.WriteLine($" {sudoku.name} invaild Sudoku: {ex.Message}");
+            continue;
+        }
+
         Stopwatch sw = Stopwatch.StartNew();
         sudoku.Solve();
         sw.Stop();
@@ -105,3 +113,4 @@ void SudokuFromCVS(string fileName) //Logic using args and a .cvs Testfile
         Console.WriteLine($"Execution Time: {sw.Elapsed.TotalMilliseconds} ms\n");  
     }
 }
+
