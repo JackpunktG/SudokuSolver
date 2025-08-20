@@ -1,19 +1,18 @@
 # Sudoku Solver
 
-Im back at it with a sudoku solver!! Whilst I get to know my way around C#!!
+Im back at it with a sudoku solver!! Whilst I get to know my way around C#
 
 ### Updates
 
-- Added pair logic (now up to 3!!) to guess and check the results - can now even get some trickier solve 
+- Added pairing logic to solve all sudokus
+- Also checks inputs of valid Sudoku Puzzle
 - Contradiction test to stop branches that lead to unsolvable, forever looping, states
 - Now this user inputs!! Test your sudokus today, with error handling whilst inputing for ease of use :)
 
 ##### to come
 
 - Streamline and optimise the code
-- Want a way to dynamically function the guessing logic all the way up to the whole 9 so we could potenitally solve all Sudokus
-- ~~guessing for triples to enable harder solves~~
-- ~~Quadrant pairs~~
+- ~~guessing branching logic to enable all sudokus to be solved~~
 - improved user inputs and testing. 
 - sudoku builder??
 
