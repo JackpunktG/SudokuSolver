@@ -6,8 +6,8 @@ using System.Xml.Serialization;
 using Sudoku;
 
 
-string option = args[0].ToLower();
-
+//string option = args[0].ToLower();
+string option = "ui";
 
 switch (option)
 {

@@ -1,4 +1,5 @@
 using System.Data;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Dynamic;
@@ -149,7 +150,7 @@ public class SudokuPuzzle
     {
         for (int i = 0; i < 9; i++) RowPair(i, 2);
         for (int i = 0; i < 9; i++) ColumnPair(i, 2);
-        for (int i = 0; i < 9; i++) QuadrantPair(i, 3);
+        for (int i = 0; i < 9; i++) QuadrantPair(i, 2);
         for (int i = 0; i < 9; i++) RowPair(i, 3);
         for (int i = 0; i < 9; i++) ColumnPair(i, 3);
         for (int i = 0; i < 9; i++) QuadrantPair(i, 3);
